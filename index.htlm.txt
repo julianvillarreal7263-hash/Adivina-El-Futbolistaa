@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adivina el Futbolista - Champions Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: radial-gradient(circle at center, #0B193C 0%, #050B1A 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .font-teko {
+            font-family: 'Teko', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* Glassmorphism Card Style */
+        .futuristic-card {
+            background: rgba(13, 27, 62, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(0, 10, 30, 0.8),
+                        inset 0 0 15px rgba(0, 212, 255, 0.1);
+        }
+
+        .gold-border {
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Glow effects */
+        .glow-cyan {
+            text-shadow: 0 0 12px rgba(0, 212, 255, 0.7);
+        }
+
+        .glow-gold {
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.7);
+        }
+
+        /* Custom buttons styling */
+        .option-btn {
+            background: linear-gradient(135deg, rgba(16, 37, 84, 0.8) 0%, rgba(8, 20, 50, 0.9) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.01);
+            border-color: rgba(0, 212, 255, 0.8);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            background: linear-gradient(135deg, rgba(20, 50, 110, 0.9) 0%, rgba(12, 30, 70, 0.95) 100%);
+        }
+
+        /* Answer feedback states */
+        .correct-answer {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(6, 95, 70, 0.8) 100%) !important;
+            border-color: #10B981 !important;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6) !important;
+            color: #ffffff !important;
+        }
+
+        .wrong-answer {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(153, 27, 27, 0.8) 100%) !important;
+            border-color: #EF4444 !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+            color: #ffffff !important;
+        }
+
+        /* Stars Background Effect */
+        .star-bg {
+            background-image: radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                              radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.8), rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+        }
+
+        /* Pulse Animations */
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
+        }
+
+        .animate-pulse-glow {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="star-bg flex items-center justify-center min-h-screen p-3 md:p-6 select-none">
+
+    <div class="w-full max-w-3xl mx-auto">
+
+        <!-- Top Header Navigation / Score Bar -->
+        <header class="flex justify-between items-center mb-4 md:mb-6 px-2">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-futbol text-cyan-400 text-2xl md:text-3xl animate-spin" style="animation-duration: 12s;"></i>
+                <span class="font-teko text-2xl md:text-3xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                    ADIVINA EL FUTBOLISTA
+                </span>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="bg-blue-950/80 px-3 py-1.5 rounded-lg border border-cyan-500/30 flex items-center space-x-2">
+                    <i class="fa-solid fa-trophy text-yellow-400 text-sm md:text-base"></i>
+                    <span class="text-xs md:text-sm text-gray-300 font-semibold">PUNTOS:</span>
+                    <span id="score-display" class="font-teko text-xl md:text-2xl text-yellow-400 font-bold glow-gold">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Progress Bar Container -->
+        <div class="mb-4 bg-slate-900/80 rounded-full h-3.5 p-0.5 border border-cyan-500/20 shadow-inner">
+            <div id="progress-bar" class="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out w-0 shadow-lg shadow-cyan-500/50"></div>
+        </div>
+
+        <main id="main-container" class="futuristic-card rounded-2xl p-4 md:p-8 transition-all duration-300">
+            
+            <!-- START SCREEN -->
+            <div id="start-screen" class="text-center py-6 md:py-10">
+                <div class="relative inline-block mb-6">
+                    <div class="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-tr from-cyan-500 to-yellow-400 rounded-full flex items-center justify-center p-1 animate-pulse-glow shadow-lg shadow-cyan-500/30">
+                        <div class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-users-viewfinder text-4xl md:text-6xl text-cyan-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <h1 class="font-teko text-4xl md:text-6xl font-bold tracking-wide text-white mb-2">
+                    ¿CUÁNTO SABES DE FÚTBOL?
+                </h1>
+                <p class="text-gray-300 text-sm md:text-base max-w-lg mx-auto mb-8 font-normal">
+                    Ponte a prueba con pistas exclusivas sobre clubes, títulos, dorsales y récords de los mejores jugadores del mundo. ¿Podrás alcanzar el rango de Leyenda?
+                </p>
+
+                <div class="grid grid-cols-2 gap-3 max-w-md mx-auto mb-8 text-xs md:text-sm text-gray-300">
+                    <div class="bg-blue-950/50 p-3 rounded-lg border border-cyan-500/20">
+                        <i class="fa-solid fa-list-check text-cyan-400 mb-1 text-base"></i>
+                        <p class="font-bold">10 Preguntas</p>
+                    </div>
+                    <div class="bg-blue-950/50 p-3 rounded-lg border border-cyan-500/20">
+                        <i class="fa-solid fa-award text-yellow-400 mb-1 text-base"></i>
+                        <p class="font-bold">4 Niveles de Rango</p>
+                    </div>
+                </div>
+
+                <button id="start-btn" onclick="startGame()" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-teko text-2xl tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg shadow-cyan-500/40">
+                    <i class="fa-solid fa-play mr-2 text-xl"></i> INICIAR DESAFÍO
+                </button>
+            </div>
+
+            <!-- GAME QUESTION CONTAINER (Hidden initially) -->
+            <div id="game-screen" class="hidden">
+                <!-- Question Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <span id="question-number" class="text-xs md:text-sm font-bold text-cyan-400 uppercase tracking-widest bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-500/30">
+                        Pregunta 1/10
+                    </span>
+                    <span id="difficulty-badge" class="text-xs font-bold text-yellow-400 uppercase tracking-widest bg-yellow-950/40 px-3 py-1 rounded-full border border-yellow-500/30">
+                        Dificultad: Media
+                    </span>
+                </div>
+
+                <!-- FUT Clue / Mystery Box Area -->
+                <div class="bg-slate-950/60 rounded-xl p-4 md:p-6 mb-6 border border-cyan-500/20 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 opacity-10">
+                        <i class="fa-solid fa-shield-halved text-9xl text-cyan-400"></i>
+                    </div>
+
+                    <h2 id="question-title" class="text-lg md:text-2xl font-semibold text-white mb-3">
+                        Cargando pista del futbolista...
+                    </h2>
+
+                    <!-- Pistas adicionales / Badges -->
+                    <div id="clues-container" class="flex flex-wrap gap-2 mt-3">
+                        <!-- Clues will be populated here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Answer Options (A, B, C, D) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6" id="options-container">
+                    <!-- Buttons generated dynamically -->
+                </div>
+
+                <!-- Feedback / Fact Box (Hidden until answer selected) -->
+                <div id="feedback-box" class="hidden rounded-xl p-4 mb-4 border transition-all duration-300">
+                    <div class="flex items-start space-x-3">
+                        <div id="feedback-icon" class="text-2xl md:text-3xl mt-0.5"></div>
+                        <div>
+                            <h3 id="feedback-title" class="font-teko text-2xl font-bold tracking-wide"></h3>
+                            <p id="feedback-fact" class="text-xs md:text-sm text-gray-200 mt-1 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Question Button -->
+                <div class="flex justify-end">
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-teko text-xl font-bold rounded-xl transition-all duration-200 shadow-md shadow-yellow-500/30">
+                        SIGUIENTE PREGUNTA <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RESULTS SCREEN (Hidden initially) -->
+            <div id="results-screen" class="hidden text-center py-6">
+                <div class="inline-block p-4 mb-4 rounded-full bg-slate-950/80 border-2 border-yellow-500/50 shadow-xl shadow-yellow-500/20">
+                    <i id="rank-icon" class="fa-solid fa-trophy text-5xl md:text-7xl text-yellow-400 glow-gold"></i>
+                </div>
+
+                <p class="text-sm uppercase tracking-widest text-cyan-400 font-semibold mb-1">Resultado Final</p>
+                <h2 id="rank-title" class="font-teko text-4xl md:text-6xl font-bold text-yellow-400 mb-2 glow-gold">
+                    LEYENDA DEL FÚTBOL
+                </h2>
+
+                <!-- Final Score Box -->
+                <div class="bg-slate-950/70 max-w-sm mx-auto p-4 rounded-xl border border-cyan-500/30 mb-6">
+                    <div class="text-gray-400 text-xs font-semibold mb-1">PUNTUACIÓN OBTENIDA</div>
+                    <div class="font-teko text-5xl font-bold text-white">
+                        <span id="final-score" class="text-cyan-400">0</span> <span class="text-2xl text-gray-500">/ 100</span>
+                    </div>
+                    <p id="accuracy-text" class="text-xs text-gray-300 mt-1"></p>
+                </div>
+
+                <p id="rank-description" class="text-gray-300 text-sm md:text-base max-w-md mx-auto mb-8 leading-relaxed">
+                    ¡Impresionante! Demostraste un conocimiento enciclopédico sobre las estrellas del fútbol mundial.
+                </p>
+
+                <!-- Action buttons -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="startGame()" class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-teko text-2xl tracking-wider rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/30">
+                        <i class="fa-solid fa-rotate-right mr-2"></i> JUGAR DE NUEVO
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-6 text-center text-xs text-gray-500">
+            <p>Juego interactivo de trivia futbolística • Edición Especial</p>
+        </footer>
+    </div>
+
+    <script>
+        // Database of Questions
+        const questionsDatabase = [
+            {
+                id: 1,
+                question: "¿Qué futbolista ganó el Mundial en 2022, lució el dorsal 10 y pasó la mayor parte de su carrera europea en el FC Barcelona?",
+                clues: ["Nacionalidad: Argentina 🇦🇷", "Posición: Delantero / Delantero centro", "Múltiple ganador del Balón de Oro"],
+                options: [
+                    "A) Sergio Agüero",
+                    "B) Lionel Messi",
+                    "C) Ángel Di María",
+                    "D) Paulo Dybala"
+                ],
+                correctIndex: 1, // B
+                difficulty: "Fácil",
+                fact: "Lionel Messi ganó su primer Mundial en Qatar 2022 y posee el récord histórico de más Balones de Oro ganados en la historia del fútbol."
+            },
+            {
+                id: 2,
+                question: "Conocido como 'El Bicho' o 'CR7', es el máximo goleador histórico del Real Madrid y de la UEFA Champions League. ¿Quién es?",
+                clues: ["Nacionalidad: Portugal 🇵🇹", "Clubes: Man. United, Real Madrid, Juventus", "5 veces ganador de la Champions"],
+                options: [
+                    "A) Cristiano Ronaldo",
+                    "B) Luis Figo",
+                    "C) Bruno Fernandes",
+                    "D) João Félix"
+                ],
+                correctIndex: 0, // A
+                difficulty: "Fácil",
+                fact: "Cristiano Ronaldo ha anotado más de 850 goles oficiales en su carrera profesional y ha ganado la Champions con dos clubes distintos."
+            },
+            {
+                id: 3,
+                question: "Delantero francés campeón del mundo en 2018, conocido por su vertiginosa velocidad y por su histórico fichaje por el Real Madrid en 2024. ¿Quién es?",
+                clues: ["Nacionalidad: Francia 🇫🇷", "Ex-equipo principal: PSG", "Máximo goleador del Mundial 2022"],
+                options: [
+                    "A) Antoine Griezmann",
+                    "B) Ousmane Dembélé",
+                    "C) Kylian Mbappé",
+                    "D) Karim Benzema"
+                ],
+                correctIndex: 2, // C
+                difficulty: "Fácil",
+                fact: "Mbappé anotó un hat-trick en la final del Mundial de Qatar 2022 con apenas 23 años de edad."
+            },
+            {
+                id: 4,
+                question: "Centrocampista belga célebre por su extraordinaria visión de juego y asistencias quirúrgicas en el Manchester City de Pep Guardiola.",
+                clues: ["Nacionalidad: Bélgica 🇧🇪", "Posición: Mediocentro Ofensivo", "Dorsal habitual: 17"],
+                options: [
+                    "A) Eden Hazard",
+                    "B) Kevin De Bruyne",
+                    "C) Youri Tielemans",
+                    "D) Luka Modrić"
+                ],
+                correctIndex: 1, // B
+                difficulty: "Media",
+                fact: "Kevin De Bruyne ostenta el récord de más asistencias en una sola temporada de la Premier League (20), empatado con Thierry Henry."
+            },
+            {
+                id: 5,
+                question: "Delantero noruego apodado 'El Androide' por su letal capacidad goleadora. batió el récord de goles en una sola temporada de Premier League con el Manchester City.",
+                clues: ["Nacionalidad: Noruega 🇳🇴", "Ex-club: Borussia Dortmund", "Bota de Oro europea en 2023"],
+                options: [
+                    "A) Martin Ødegaard",
+                    "B) Alexander Sørloth",
+                    "C) Erling Haaland",
+                    "D) Joshua Zirkzee"
+                ],
+                correctIndex: 2, // C
+                difficulty: "Media",
+                fact: "Erling Haaland anotó 36 goles en su primera temporada de Premier League (2022-23), superando la marca histórica de Alan Shearer y Andy Cole."
+            },
+            {
+                id: 6,
+                question: "Leyenda brasileña del mediocampo ofensivo. Famoso por su magia, su sonrisa imborrable y por ganar el Balón de Oro 2005 deslumbrando en el Barcelona.",
+                clues: ["Nacionalidad: Brasil 🇧🇷", "Apodo: 'Gaúcho'", "Campeón del Mundo en 2002"],
+                options: [
+                    "A) Ronaldinho",
+                    "B) Kaká",
+                    "C) Rivaldo",
+                    "D) Robinho"
+                ],
+                correctIndex: 0, // A
+                difficulty: "Media",
+                fact: "Ronaldinho es uno de los poquísimos jugadores del Barcelona que recibió una ovación de pie en el Estadio Santiago Bernabéu tras una exhibición antológica."
+            },
+            {
+                id: 7,
+                question: "Insigne mediocampista croata, ganador del Balón de Oro en 2018 rompiendo la hegemonía de Messi y Cristiano Ronaldo tras liderar a Croacia a la final del Mundial.",
+                clues: ["Nacionalidad: Croacia 🇭🇷", "Dorsal: 10 en Real Madrid", "5+ títulos de Champions League"],
+                options: [
+                    "A) Ivan Rakitić",
+                    "B) Mateo Kovačić",
+                    "C) Luka Modrić",
+                    "D) Marcelo Brozović"
+                ],
+                correctIndex: 2, // C
+                difficulty: "Media",
+                fact: "Luka Modrić ganó cuatro Champions en solo cinco años con el Real Madrid y fue nombrado Mejor Jugador del Mundial de Rusia 2018."
+            },
+            {
+                id: 8,
+                question: "Delantero polaco, especialista en el área, que hizo historia al anotar 5 goles en apenas 9 minutos jugando para el Bayern Múnich.",
+                clues: ["Nacionalidad: Polonia 🇵🇱", "Actual equipo: FC Barcelona", "Múltiples Botas de Oro"],
+                options: [
+                    "A) Robert Lewandowski",
+                    "B) Arkadiusz Milik",
+                    "C) Krzysztof Piątek",
+                    "D) Thomas Müller"
+                ],
+                correctIndex: 0, // A
+                difficulty: "Difícil",
+                fact: "El 22 de septiembre de 2015, Lewandowski entró desde el banquillo ante el Wolfsburgo y marcó 5 goles entre el minuto 51 y el 60."
+            },
+            {
+                id: 9,
+                question: "Joven prodigio inglés que deslumbró con la camiseta número 5 en el Real Madrid desde su llegada en 2023, siendo clave en la conquista de la Champions y Liga.",
+                clues: ["Nacionalidad: Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Ex-equipo: Borussia Dortmund", "Trofeo Kopa & Golden Boy 2023"],
+                options: [
+                    "A) Harry Kane",
+                    "B) Phil Foden",
+                    "C) Jude Bellingham",
+                    "D) Marcus Rashford"
+                ],
+                correctIndex: 2, // C
+                difficulty: "Media",
+                fact: "Jude Bellingham heredó el histórico número 5 de Zinedine Zidane en el Real Madrid y marcó 14 goles en sus primeros 15 partidos oficiales."
+            },
+            {
+                id: 10,
+                question: "Guardameta alemán considerado revolucionario por su rol de 'portero-líbero'. Fue figura clave en el título mundial de Alemania en 2014.",
+                clues: ["Nacionalidad: Alemania 🇩🇪", "Club: Bayern Múnich", "Guante de Oro Mundial 2014"],
+                options: [
+                    "A) Marc-André ter Stegen",
+                    "B) Manuel Neuer",
+                    "C) Oliver Kahn",
+                    "D) Jens Lehmann"
+                ],
+                correctIndex: 1, // B
+                difficulty: "Difícil",
+                fact: "Manuel Neuer redefinió la posición de portero moderno saliendo continuamente del área para interceptar balones y distribuir juego con los pies."
+            }
+        ];
+
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // DOM Element References
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        
+        const scoreDisplay = document.getElementById('score-display');
+        const progressBar = document.getElementById('progress-bar');
+        
+        const questionNumberEl = document.getElementById('question-number');
+        const difficultyBadgeEl = document.getElementById('difficulty-badge');
+        const questionTitleEl = document.getElementById('question-title');
+        const cluesContainer = document.getElementById('clues-container');
+        const optionsContainer = document.getElementById('options-container');
+        
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackFact = document.getElementById('feedback-fact');
+        const nextBtn = document.getElementById('next-btn');
+
+        function startGame() {
+            // Shuffle questions to offer replayability
+            currentQuestions = [...questionsDatabase].sort(() => Math.random() - 0.5);
+            currentQuestionIndex = 0;
+            score = 0;
+            answered = false;
+
+            scoreDisplay.textContent = score;
+            
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            feedbackBox.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+
+            const q = currentQuestions[currentQuestionIndex];
+
+            // Update Progress Bar
+            const progressPercent = ((currentQuestionIndex) / currentQuestions.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Question Counters and Info
+            questionNumberEl.textContent = `PREGUNTA ${currentQuestionIndex + 1} / ${currentQuestions.length}`;
+            difficultyBadgeEl.textContent = `Dificultad: ${q.difficulty}`;
+            
+            // Set difficulty color
+            if (q.difficulty === 'Fácil') {
+                difficultyBadgeEl.className = 'text-xs font-bold text-emerald-400 uppercase tracking-widest bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30';
+            } else if (q.difficulty === 'Media') {
+                difficultyBadgeEl.className = 'text-xs font-bold text-yellow-400 uppercase tracking-widest bg-yellow-950/40 px-3 py-1 rounded-full border border-yellow-500/30';
+            } else {
+                difficultyBadgeEl.className = 'text-xs font-bold text-rose-400 uppercase tracking-widest bg-rose-950/40 px-3 py-1 rounded-full border border-rose-500/30';
+            }
+
+            questionTitleEl.textContent = q.question;
+
+            // Render Clues
+            cluesContainer.innerHTML = '';
+            q.clues.forEach(clue => {
+                const badge = document.createElement('span');
+                badge.className = 'text-xs font-semibold bg-blue-900/60 text-cyan-300 border border-cyan-500/30 px-2.5 py-1 rounded-md flex items-center gap-1.5';
+                badge.innerHTML = `<i class="fa-solid fa-lightbulb text-yellow-400"></i> ${clue}`;
+                cluesContainer.appendChild(badge);
+            });
+
+            // Render Options (A, B, C, D)
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn text-left p-4 rounded-xl font-semibold text-sm md:text-base text-gray-100 flex items-center justify-between w-full';
+                btn.innerHTML = `
+                    <span>${opt}</span>
+                    <i class="fa-regular fa-circle text-gray-500 opacity-60 status-icon"></i>
+                `;
+                btn.onclick = () => selectOption(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            const q = currentQuestions[currentQuestionIndex];
+            const optionButtons = optionsContainer.children;
+
+            // Disable all option buttons
+            Array.from(optionButtons).forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('cursor-not-allowed');
+            });
+
+            const isCorrect = selectedIndex === q.correctIndex;
+
+            if (isCorrect) {
+                // Award points
+                score += 10;
+                scoreDisplay.textContent = score;
+
+                // Style chosen button as correct
+                const selectedBtn = optionButtons[selectedIndex];
+                selectedBtn.classList.add('correct-answer');
+                selectedBtn.querySelector('.status-icon').className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+
+                // Display Correct Feedback
+                feedbackBox.className = 'rounded-xl p-4 mb-4 border bg-emerald-950/40 border-emerald-500/40 text-emerald-200 block animate-fadeIn';
+                feedbackIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-3xl';
+                feedbackTitle.textContent = '¡ACIERTO GOLEADOR! (+10 PTS)';
+                feedbackTitle.className = 'font-teko text-2xl font-bold tracking-wide text-emerald-400';
+            } else {
+                // Style chosen button as wrong
+                const selectedBtn = optionButtons[selectedIndex];
+                selectedBtn.classList.add('wrong-answer');
+                selectedBtn.querySelector('.status-icon').className = 'fa-solid fa-circle-xmark text-rose-400 text-lg';
+
+                // Highlight correct answer
+                const correctBtn = optionButtons[q.correctIndex];
+                correctBtn.classList.add('correct-answer');
+                correctBtn.querySelector('.status-icon').className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+
+                // Display Wrong Feedback
+                feedbackBox.className = 'rounded-xl p-4 mb-4 border bg-rose-950/40 border-rose-500/40 text-rose-200 block animate-fadeIn';
+                feedbackIcon.className = 'fa-solid fa-circle-xmark text-rose-400 text-3xl';
+                feedbackTitle.textContent = '¡TARJETA AMARILLA! (RESPUESTA INCORRECTA)';
+                feedbackTitle.className = 'font-teko text-2xl font-bold tracking-wide text-rose-400';
+            }
+
+            feedbackFact.textContent = q.fact;
+            feedbackBox.classList.remove('hidden');
+
+            // Show Next Button
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            gameScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            // Full progress bar at the end
+            progressBar.style.width = '100%';
+
+            const finalScoreEl = document.getElementById('final-score');
+            const accuracyTextEl = document.getElementById('accuracy-text');
+            const rankTitleEl = document.getElementById('rank-title');
+            const rankDescEl = document.getElementById('rank-description');
+            const rankIconEl = document.getElementById('rank-icon');
+
+            finalScoreEl.textContent = score;
+            const correctAnswersCount = score / 10;
+            accuracyTextEl.textContent = `Acertaste ${correctAnswersCount} de ${currentQuestions.length} preguntas (${(score)}% de efectividad)`;
+
+            // Calculate Ranking based on score
+            if (score === 100) {
+                rankTitleEl.textContent = 'LEYENDA DEL FÚTBOL';
+                rankTitleEl.className = 'font-teko text-4xl md:text-6xl font-bold text-yellow-400 mb-2 glow-gold';
+                rankIconEl.className = 'fa-solid fa-crown text-5xl md:text-7xl text-yellow-400 glow-gold';
+                rankDescEl.textContent = '¡Puntuación perfecta! Conoces cada detalle, registro y secreto del balompié mundial. Estás a la altura de los más grandes de la historia.';
+            } else if (score >= 70) {
+                rankTitleEl.textContent = 'TITULAR DE PRIMERA';
+                rankTitleEl.className = 'font-teko text-4xl md:text-6xl font-bold text-cyan-400 mb-2 glow-cyan';
+                rankIconEl.className = 'fa-solid fa-star text-5xl md:text-7xl text-cyan-400 glow-cyan';
+                rankDescEl.textContent = '¡Gran actuación! Tienes un nivel táctico y de conocimiento envidiable. Eres un pilar indispensable en cualquier equipo.';
+            } else if (score >= 50) {
+                rankTitleEl.textContent = 'SUPLENTE PROMESA';
+                rankTitleEl.className = 'font-teko text-4xl md:text-6xl font-bold text-blue-400 mb-2';
+                rankIconEl.className = 'fa-solid fa-user-ninja text-5xl md:text-7xl text-blue-400';
+                rankDescEl.textContent = 'Buen intento. Tienes destellos de gran crack, pero aún te falta afinar algunos detalles futbolísticos para dar el salto a la titularidad.';
+            } else {
+                rankTitleEl.textContent = 'CANTERANO EN FORMACIÓN';
+                rankTitleEl.className = 'font-teko text-4xl md:text-6xl font-bold text-gray-400 mb-2';
+                rankIconEl.className = 'fa-solid fa-seedling text-5xl md:text-7xl text-gray-400';
+                rankDescEl.textContent = 'Aún queda entrenamiento por delante. ¡No te desanimes! Vuelve a jugar para repasar las pistas y subir de categoría.';
+            }
+        }
+    </script>
+</body>
+</html>
